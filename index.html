@@ -3,65 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مفردات شد الله بليز</title>
+  <title>دو أن هامبر</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
     body {
-      font-family: "Tahoma", sans-serif;
+      font-family: 'SF Pro Display', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      border: 5px solid black;
+      margin: 40px;
+      padding: 20px;
       text-align: center;
-      background-color: #1e1e1e;
-      color: white;
-      padding: 40px;
+      border-radius: 30px;
     }
-    input {
-      width: 80%;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      margin-bottom: 20px;
-      font-size: 18px;
+    h1 {
+      font-size: 40px;
     }
-    button {
-      padding: 10px 20px;
-      background-color: #0078ff;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-size: 18px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      margin: 10px 0;
-      font-size: 20px;
+    p {
+      font-size: 22px;
     }
   </style>
 </head>
 <body>
-  <h1>قاموس المفردات العربية</h1>
-  <input type="text" id="search" placeholder="اكتب حرفين أو أكثر..." />
-  <button onclick="searchWords()">بحث</button>
-  <ul id="results"></ul>
-
-  <script>
-    const words = ["يكتب", "كتاب", "كاتب", "مكتوب", "مدرسة", "مدرس", "درس", "دراسة", "مدينة", "تمرين", "مفردة", "لغة", "عربية"];
-
-    function searchWords() {
-      const input = document.getElementById("search").value;
-      const results = document.getElementById("results");
-      results.innerHTML = "";
-      const filtered = words.filter(w => w.includes(input));
-      if (filtered.length === 0) {
-        results.innerHTML = "<li>ماكو نتائج 😢</li>";
-      } else {
-        filtered.forEach(w => {
-          const li = document.createElement("li");
-          li.textContent = w;
-          results.appendChild(li);
-        });
-      }
-    }
-  </script>
+  <h1>دو أن هامبر</h1>
+  <p>موقع تجريبي بخط آيفون وحواف سوداء 🖤</p>
 </body>
 </html>
