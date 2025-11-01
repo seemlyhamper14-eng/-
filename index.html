@@ -1,31 +1,180 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>دو أن هامبر</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600&display=swap');
-    body {
-      font-family: 'SF Pro Display', sans-serif;
-      background-color: #ffffff;
-      color: #000000;
-      border: 5px solid black;
-      margin: 40px;
-      padding: 20px;
-      text-align: center;
-      border-radius: 30px;
-    }
-    h1 {
-      font-size: 40px;
-    }
-    p {
-      font-size: 22px;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>قاموس المفردات — بحث بنهاية الكلمة</title>
+<style>
+  :root{
+    --bg: #ffffff;
+    --fg: #000000;
+    --card-bg: #fafafa;
+    --border: #000000;
+  }
+  html,body{height:100%;margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial, sans-serif;}
+  .wrap{
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:30px;
+    box-sizing:border-box;
+  }
+  .card{
+    width:95%;
+    max-width:600px;
+    border:4px solid var(--border);
+    border-radius:18px;
+    padding:28px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.06);
+    background:var(--bg);
+    text-align:center;
+  }
+  h1{margin:0 0 8px;font-size:30px;letter-spacing:1px;}
+  p.lead{margin:0 0 16px;color:#222;opacity:.9}
+  .controls{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:10px}
+  input#q{
+    flex:1;
+    min-width:160px;
+    max-width:420px;
+    padding:12px 14px;
+    font-size:18px;
+    border-radius:10px;
+    border:2px solid var(--border);
+    outline:none;
+    box-sizing:border-box;
+  }
+  .small-note{font-size:13px;color:#333;margin-top:6px}
+  .results{margin-top:18px;display:flex;flex-direction:column;gap:8px;align-items:center}
+  .item{
+    width:90%;
+    max-width:520px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-sizing:border-box;
+    font-size:18px;
+  }
+  .item .word{flex:1;text-align:right;padding-right:8px;word-break:break-word}
+  .btn-copy{
+    background:#000;color:#fff;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;
+  }
+  .empty{color:#666;font-size:16px;margin-top:12px}
+  footer{margin-top:18px;font-size:12px;color:#444;opacity:.8}
+  /* responsive */
+  @media (max-width:420px){
+    .card{padding:18px}
+    input#q{font-size:16px;padding:10px}
+    .item{font-size:16px}
+  }
+</style>
 </head>
 <body>
-  <h1>دو أن هامبر</h1>
-  <p>موقع تجريبي بخط آيفون وحواف سوداء 🖤</p>
+  <div class="wrap">
+    <div class="card" role="main">
+      <h1>قاموس المفردات</h1>
+      <p class="lead">اكتب آخر حرفين (أو أكثر) — النتائج تظهر فوراً</p>
+
+      <div class="controls">
+        <input id="q" placeholder="اكتب آخر حرفين مثلاً: يه" autocomplete="off" />
+      </div>
+      <div class="small-note">زر النسخ يم كل كلمة — يدعم مفردات عربيّة (فصحى وعامية)</div>
+
+      <div id="results" class="results" aria-live="polite"></div>
+
+      <footer>موقعك • مفردات قابلة للتوسيع عبر ملف <code>words.txt</code></footer>
+    </div>
+  </div>
+
+<script>
+/*
+  وظيفة:
+  - يحاول يحمل ملف "words.txt" من نفس مجلد الموقع (كل كلمة بسطر)
+  - إذا ماكو الملف، يستخدم مجموعة تجريبية صغيرة
+  - البحث مباشر: debounce 200ms ثم يعرض الكلمات التي تنتهي بالنص المدخل
+*/
+
+// small debounce helper
+function debounce(fn,delay){
+  let t;
+  return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+}
+
+let WORDS = ["قضية","حياة","تحية","هدية","منية","وصية","عليها","عليه","فيها","فيه","سماء","ضياء","ذكاء","صفاء","دعاء","وفاء","سناء","رجاء","هوية","جنية","برية"];
+let loaded = false;
+
+async function loadWords(){
+  try{
+    const resp = await fetch('words.txt', {cache: "no-store"});
+    if(!resp.ok) throw new Error('no words file');
+    const txt = await resp.text();
+    const arr = txt.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if(arr.length) WORDS = arr;
+    loaded = true;
+    //console.log('words loaded', WORDS.length);
+  }catch(e){
+    // file not found — نستمر بالمجموعة التجريبية
+    loaded = true;
+    //console.warn('no words file, using sample');
+  }
+}
+
+function renderResults(list){
+  const box = document.getElementById('results');
+  box.innerHTML = '';
+  if(!list || list.length === 0){
+    const el = document.createElement('div');
+    el.className = 'empty';
+    el.textContent = 'ماكو نتائج';
+    box.appendChild(el);
+    return;
+  }
+  for(const w of list){
+    const row = document.createElement('div');
+    row.className = 'item';
+    const span = document.createElement('div');
+    span.className = 'word';
+    span.textContent = w;
+    const btn = document.createElement('button');
+    btn.className = 'btn-copy';
+    btn.textContent = 'نسخ';
+    btn.onclick = ()=> {
+      navigator.clipboard.writeText(w).then(()=> {
+        btn.textContent = 'انسخ✓';
+        setTimeout(()=> btn.textContent = 'نسخ', 900);
+      }).catch(()=> alert('فشل النسخ'));
+    };
+    row.appendChild(span);
+    row.appendChild(btn);
+    box.appendChild(row);
+  }
+}
+
+function doSearch(){
+  const q = document.getElementById('q').value.trim();
+  if(q.length < 1){ renderResults([]); return; } // تطلب حرفين بس تقدر تغيّر
+  // نبحث على الكلمات اللي تنتهي بالقيمة (case-sensitive غير مهم بالعربي)
+  const out = WORDS.filter(w => w.endsWith(q));
+  renderResults(out.slice(0, 500)); // safety limit
+}
+
+const debSearch = debounce(doSearch, 200);
+
+document.getElementById('q').addEventListener('input', ()=> {
+  // لو تبي شرط حرفين بدل 1: if(this.value.trim().length<2) return;
+  debSearch();
+});
+
+// load words file
+loadWords().then(()=> {
+  // لو حبيت تعرض شي افتراضي
+  // renderResults([]);
+});
+</script>
 </body>
 </html>
