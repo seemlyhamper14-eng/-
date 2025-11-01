@@ -1,76 +1,24 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>قاموس المفردات العربية والعامية 🔍</title>
-  <style>
-    body {
-      background-color: white;
-      color: black;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Arial", sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
-      border: 5px solid black;
-      border-radius: 20px;
-    }
-    input {
-      font-size: 20px;
-      padding: 10px;
-      width: 80%;
-      border: 2px solid black;
-      border-radius: 10px;
-      outline: none;
-      margin-bottom: 20px;
-    }
-    .result {
-      font-size: 18px;
-      margin: 5px 0;
-      direction: rtl;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>انسخ تلميذي</title>
+<style>
+  body {
+    background-color: #000;
+    color: #fff;
+    font-family: "Cairo", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-size: 28px;
+  }
+</style>
 </head>
 <body>
-  <h1>قاموس الكلمات العربية والعامية 🔍</h1>
-  <p>اكتب آخر حرفين أو أكثر وشوف الكلمات اللي تنتهي بيهن:</p>
-  <input type="text" id="search" placeholder="مثلاً: يه ، ان ، ون ..." />
-  <div id="results"></div>
-
-  <script>
-    let words = [];
-
-    // تحميل الملف الكبير من GitHub (مليون كلمة)
-    fetch("https://raw.githubusercontent.com/6jb/arabic-wordlist/master/arabic_wordlist.txt")
-      .then(r => r.text())
-      .then(text => {
-        words = text.split("\n").map(w => w.trim()).filter(Boolean);
-        console.log("تم تحميل الكلمات:", words.length);
-      })
-      .catch(err => {
-        console.error("خطأ في تحميل الملف:", err);
-      });
-
-    const input = document.getElementById("search");
-    const resultsDiv = document.getElementById("results");
-
-    input.addEventListener("input", () => {
-      const query = input.value.trim();
-      resultsDiv.innerHTML = "";
-      if (query.length < 2) return;
-
-      const matches = words.filter(w => w.endsWith(query));
-      if (matches.length === 0) {
-        resultsDiv.innerHTML = "<p>ماكو كلمات مطابقة 😅</p>";
-      } else {
-        matches.slice(0, 100).forEach(word => {
-          const div = document.createElement("div");
-          div.className = "result";
-          div.textContent = word;
-          resultsDiv.appendChild(div);
-        });
-      }
-    });
-  </script>
+  <div>انسخ تلميذي</div>
 </body>
 </html>
