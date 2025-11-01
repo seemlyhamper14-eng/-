@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>قاموس الحروف العربية</title>
+  <title>قاموس المفردات العربية والعامية 🔍</title>
   <style>
     body {
       background-color: white;
@@ -32,20 +32,23 @@
   </style>
 </head>
 <body>
-  <h1>قاموس المفردات العربية 🔍</h1>
+  <h1>قاموس الكلمات العربية والعامية 🔍</h1>
   <p>اكتب آخر حرفين أو أكثر وشوف الكلمات اللي تنتهي بيهن:</p>
   <input type="text" id="search" placeholder="مثلاً: يه ، ان ، ون ..." />
-
   <div id="results"></div>
 
   <script>
     let words = [];
 
-    // تحميل الملف arabic_words_100k.txt من نفس المستودع
-    fetch("arabic_words_100k.txt")
+    // تحميل الملف الكبير من GitHub (مليون كلمة)
+    fetch("https://raw.githubusercontent.com/6jb/arabic-wordlist/master/arabic_wordlist.txt")
       .then(r => r.text())
       .then(text => {
         words = text.split("\n").map(w => w.trim()).filter(Boolean);
+        console.log("تم تحميل الكلمات:", words.length);
+      })
+      .catch(err => {
+        console.error("خطأ في تحميل الملف:", err);
       });
 
     const input = document.getElementById("search");
@@ -60,7 +63,7 @@
       if (matches.length === 0) {
         resultsDiv.innerHTML = "<p>ماكو كلمات مطابقة 😅</p>";
       } else {
-        matches.forEach(word => {
+        matches.slice(0, 100).forEach(word => {
           const div = document.createElement("div");
           div.className = "result";
           div.textContent = word;
