@@ -1,24 +1,185 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>انسخ تلميذي</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>قاموس بلاير</title>
 <style>
-  body {
-    background-color: #000;
-    color: #fff;
-    font-family: "Cairo", sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    font-size: 28px;
+  :root{
+    --bg:#000;
+    --fg:#fff;
+    --card:#0b0b0b;
+    --border:#111;
+    --btn-bg:#000;
+    --btn-fg:#fff;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;}
+  .card{
+    width:100%;
+    max-width:760px;
+    border:3px solid var(--border);
+    border-radius:18px;
+    padding:22px;
+    background:linear-gradient(180deg, #000 0%, #0a0a0a 100%);
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+  }
+  h1{margin:0 0 6px;font-size:24px;text-align:center}
+  p.lead{margin:0 0 12px;opacity:.9;color:#ddd}
+  .controls{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+  input#q{
+    width:70%;
+    min-width:180px;
+    padding:12px 14px;
+    font-size:18px;
+    border-radius:10px;
+    border:2px solid var(--border);
+    background:#0b0b0b;
+    color:var(--fg);
+    outline:none;
+    box-sizing:border-box;
+  }
+  .note{font-size:13px;color:#bbb;margin-top:8px;text-align:center}
+  .results{margin-top:18px;display:flex;flex-direction:column;gap:8px;align-items:stretch;justify-content:flex-start}
+  .item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#080808;
+    color:var(--fg);
+    font-size:18px;
+    direction:rtl;
+    gap:10px;
+    box-sizing:border-box;
+  }
+  .word{flex:1;text-align:right;word-break:break-word;padding-right:8px}
+  .meta{font-size:13px;color:#999}
+  .btn-copy{
+    background:var(--btn-bg);
+    color:var(--btn-fg);
+    border:1px solid #222;
+    padding:6px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  .btn-copy.copied{background:#fff;color:#000}
+  .empty{color:#999;text-align:center;padding:10px}
+  .footer{margin-top:14px;font-size:13px;color:#aaa;text-align:center}
+  @media(max-width:520px){
+    input#q{width:100%}
+    .item{font-size:16px}
   }
 </style>
 </head>
 <body>
-  <div>انسخ تلميذي</div>
+  <div class="wrap">
+    <div class="card" role="main" aria-live="polite">
+      <h1>قاموس بلاير</h1>
+      <p class="lead">اكتب آخر حرفين أو أكثر — النتائج تظهر فوراً. (ينتهي باللي تكتبه)</p>
+
+      <div class="controls">
+        <input id="q" placeholder="اكتب آخر حرفين مثلاً: يه أو ان..." autocomplete="off" aria-label="حروف النهاية" />
+      </div>
+      <div class="note">زر صغير يم كل كلمة: <strong>📋 انسخ تلميذي</strong></div>
+
+      <div id="results" class="results" aria-live="polite"></div>
+      <div class="footer">مصدر الكلمات: قائمة جاهزة (يمكن تحديثها لاحقاً).</div>
+    </div>
+  </div>
+
+<script>
+/* Debounce helper */
+function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+/* الكلمات تتحمّل من ملف خارجي (مخزن على GitHub raw).
+   هذا رابط عام معروف يحوي قوائم عربيّة كبيرة.
+   إذا صار CORS أو تأخير، ننقلك ترفع الملف داخل المستودع بنفس الاسم.
+*/
+const WORDS_URL = "https://raw.githubusercontent.com/6jb/arabic-wordlist/master/arabic_wordlist.txt";
+
+let WORDS = [];
+let loaded = false;
+
+async function loadWords(){
+  try{
+    const r = await fetch(WORDS_URL);
+    if(!r.ok) throw new Error("failed");
+    const txt = await r.text();
+    WORDS = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    loaded = true;
+    console.log("words loaded:", WORDS.length);
+  }catch(e){
+    console.error("cannot load words:", e);
+    // Fallback: small sample so UI not empty
+    WORDS = ["كتاب","عليها","فيه","حياة","قضية","هدية","تحية","خوش","يابه","چان","شكد","مواكب"];
+    loaded = true;
+  }
+}
+loadWords();
+
+/* UI */
+const q = document.getElementById('q');
+const resultsBox = document.getElementById('results');
+
+function renderList(list){
+  resultsBox.innerHTML = "";
+  if(!list || list.length === 0){
+    const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'ماكو كلمات مطابقة 😅';
+    resultsBox.appendChild(e); return;
+  }
+  // show count
+  const head = document.createElement('div'); head.className='item';
+  head.innerHTML = `<div class="word">عدد النتائج: <strong>${list.length}</strong></div><div style="width:8px"></div>`;
+  resultsBox.appendChild(head);
+  // limit to first 1000 for performance, but user asked "كل الكلمات" — show many but bound for browser
+  const maxShow = 2000;
+  const slice = list.slice(0, Math.min(list.length, maxShow));
+  for(const w of slice){
+    const row = document.createElement('div'); row.className='item';
+    const span = document.createElement('div'); span.className='word'; span.textContent = w;
+    const btn = document.createElement('button'); btn.className='btn-copy'; btn.innerHTML = '📋 انسخ تلميذي';
+    btn.onclick = async () => {
+      try{
+        await navigator.clipboard.writeText(w);
+        btn.classList.add('copied');
+        btn.textContent = '✅ تم النسخ';
+        setTimeout(()=>{ btn.classList.remove('copied'); btn.innerHTML = '📋 انسخ تلميذي'; }, 900);
+      }catch(err){
+        alert("فشل النسخ — جرب من المتصفح أو اسمح للصق");
+      }
+    };
+    row.appendChild(span);
+    row.appendChild(btn);
+    resultsBox.appendChild(row);
+  }
+  if(list.length > maxShow){
+    const more = document.createElement('div'); more.className='empty';
+    more.textContent = `عرض أول ${maxShow} من ${list.length} نتيجة — للعرض الكامل استعمل التصفية أو ابحث بحروف أوضح.`;
+    resultsBox.appendChild(more);
+  }
+}
+
+/* Arabic endsWith: simple endsWith is okay.
+   To improve: normalize Arabic letters (optional). For now use endsWith directly.
+*/
+function doSearch(){
+  const v = q.value.trim();
+  if(v.length < 2){
+    resultsBox.innerHTML = "";
+    return;
+  }
+  if(!loaded){ resultsBox.innerHTML = '<div class="empty">جاري تحميل الكلمات، انتظر ثانية...</div>'; return; }
+  // exact ending match
+  const out = WORDS.filter(w => w.endsWith(v));
+  renderList(out);
+}
+
+const deb = debounce(doSearch, 160);
+q.addEventListener('input', deb);
+</script>
 </body>
 </html>
