@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مفردات شد الله بليز</title>
+  <style>
+    body {
+      font-family: "Tahoma", sans-serif;
+      text-align: center;
+      background-color: #1e1e1e;
+      color: white;
+      padding: 40px;
+    }
+    input {
+      width: 80%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #0078ff;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 18px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 10px 0;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>قاموس المفردات العربية</h1>
+  <input type="text" id="search" placeholder="اكتب حرفين أو أكثر..." />
+  <button onclick="searchWords()">بحث</button>
+  <ul id="results"></ul>
+
+  <script>
+    const words = ["يكتب", "كتاب", "كاتب", "مكتوب", "مدرسة", "مدرس", "درس", "دراسة", "مدينة", "تمرين", "مفردة", "لغة", "عربية"];
+
+    function searchWords() {
+      const input = document.getElementById("search").value;
+      const results = document.getElementById("results");
+      results.innerHTML = "";
+      const filtered = words.filter(w => w.includes(input));
+      if (filtered.length === 0) {
+        results.innerHTML = "<li>ماكو نتائج 😢</li>";
+      } else {
+        filtered.forEach(w => {
+          const li = document.createElement("li");
+          li.textContent = w;
+          results.appendChild(li);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
